@@ -113,6 +113,26 @@ A high-performance graphical user interface for simulating various cellular auto
 
 ## Installation
 
+## Project Structure
+
+```
+HB_Game_Of_Life/
+├── src/
+│   └── main.py           # Main application file
+├── examples/             # Example pattern files
+│   └── README.md
+├── backups/              # Development backups (not in git)
+│   └── README.md
+├── docs/                 # Documentation and screenshots
+├── requirements.txt      # Python dependencies
+├── run.sh                # Convenient launch script
+├── .gitignore            # Git ignore rules
+├── LICENSE               # MIT License
+└── README.md             # This file
+```
+
+## Installation
+
 Install dependencies:
 ```bash
 pip install -r requirements.txt
@@ -133,13 +153,23 @@ pip install -r requirements.txt
 ## Usage
 
 Run the application:
+
+**Quick Start:**
 ```bash
-python3 cellular_automaton_gui.py
+# Clone the repository
+git clone https://github.com/James-HoneyBadger/HB_Game_Of_Life.git
+cd HB_Game_Of_Life
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the application
+python src/main.py
 ```
 
-Or with virtual environment:
+Or use the convenient launch script:
 ```bash
-/home/james/Cell_Auto/.venv/bin/python cellular_automaton_gui.py
+./run.sh
 ```
 
 ### Getting Started:
@@ -149,6 +179,12 @@ Or with virtual environment:
 3. **Press Start** or **Space** to begin the simulation
 4. **Adjust speed** with the slider for faster/slower evolution
 5. **Save interesting patterns** for later (Ctrl+S)
+
+## Documentation
+
+- User Guide: docs/USER_GUIDE.md
+- Development Guide: docs/DEVELOPMENT.md
+- License: LICENSE (MIT)
 
 ### Pattern Highlights:
 
