@@ -58,26 +58,87 @@ python src/main.py
 - Optimize rendering (only dirty cells update)
 
 ## Testing
-Add `pytest` and create tests for:
-- Conway/HighLife rules behavior for known patterns (blinker, toad, block)
-- Pattern loaders place cells correctly (centered with offsets)
-- Custom rules parsing and application
+### Running Tests
+The project uses pytest for testing. Tests are located in the `tests/` directory.
 
-Example test scaffold:
+**Install pytest** (if not already installed):
+```bash
+pip install pytest
+```
+
+**Run all tests:**
+```bash
+pytest tests/ -v
+```
+
+**Run specific test file:**
+```bash
+pytest tests/test_conway.py -v
+```
+
+**Run specific test function:**
+```bash
+pytest tests/test_conway.py::test_blinker_oscillates -v
+```
+
+### Test Coverage
+Current test coverage includes:
+- **Conway's Game of Life** (`tests/test_conway.py`):
+  - Initialization and grid setup
+  - Known oscillators (blinker, toad)
+  - Still lifes (block)
+  - Spaceships (glider movement)
+  - User interactions (cell toggling via clicks)
+  - Edge cases (empty grid, reset functionality)
+
+### Writing New Tests
+When adding tests for other automata or features:
+
+1. Create test files in `tests/` directory (e.g., `test_highlife.py`)
+2. Import the automaton class from `src.main`
+3. Test known patterns and edge cases
+4. Verify step logic matches expected behavior
+
+Example test structure:
 ```python
-# tests/test_conway.py
+# tests/test_example.py
 import numpy as np
-from src.main import ConwayGameOfLife
+import sys
+import os
+
+# Add src to path for imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+from main import ConwayGameOfLife
 
 def test_blinker_oscillates():
+    """Test that a blinker pattern oscillates with period 2."""
     life = ConwayGameOfLife(10, 10)
     life.grid[:] = 0
-    # horizontal blinker at (4,5)
+    
+    # Set up horizontal blinker at row 5
     for x in [4,5,6]:
         life.grid[5, x] = 1
+    
+    # After one step, should be vertical
     life.step()
-    # should be vertical at x=5, y in [4,5,6]
     assert life.grid[4,5] == life.grid[5,5] == life.grid[6,5] == 1
+    
+    # After second step, back to horizontal
+    life.step()
+    assert life.grid[5,4] == life.grid[5,5] == life.grid[5,6] == 1
+```
+
+### Future Testing Goals
+- Add tests for remaining automata:
+  - HighLife (B36/S23 rules)
+  - ImmigrationGame (4-state interactions)
+  - RainbowGame (6-color evolution)
+  - LangtonsAnt (directional rules)
+  - LifeLikeAutomaton (custom rule parsing)
+- Test pattern loaders (ensure correct placement and offsets)
+- Test custom rule parsing (`parse_bs()` function)
+- Add GUI interaction tests (if feasible with tkinter)
+- Implement coverage reporting with pytest-cov
 ```
 
 ## Releasing
