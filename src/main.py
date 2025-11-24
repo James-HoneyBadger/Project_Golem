@@ -470,8 +470,9 @@ class CellularAutomatonGUI:
                 patterns[0]
             )
 
-        if mode_name == "Custom Rules" and self.birth_entry and self.survival_entry:
-            self.birth_entry.delete(0, tk.END)
+        if mode_name == "Custom Rules":
+            if self.birth_entry and self.survival_entry:
+                self.birth_entry.delete(0, tk.END)
             self.birth_entry.insert(
                 0,
                 "".join(str(n) for n in sorted(self.custom_birth)),
