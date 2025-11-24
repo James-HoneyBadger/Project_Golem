@@ -1,6 +1,8 @@
 # Cellular Automaton Simulator — User Guide
 
-This guide explains how to install, run, and use the Cellular Automaton Simulator, including all controls, modes, patterns, saving/loading, and exporting.
+This guide explains how to install, run, and use the Cellular Automaton
+Simulator. It summarizes controls, available modes, drawing tools, and
+workflow tips for saving and exporting.
 
 ## What it is
 A fast, interactive simulator for cellular automata with multiple modes:
@@ -11,7 +13,8 @@ A fast, interactive simulator for cellular automata with multiple modes:
 - Langton's Ant
 - Custom Rules (life-like B/S rules)
 
-The app is written in Python with Tkinter and NumPy (SciPy optional for speed), and can export snapshots as PNG images.
+The app is written in Python with Tkinter and NumPy (SciPy optional for
+speed) and exports PNG snapshots when Pillow is installed.
 
 ---
 
@@ -54,33 +57,38 @@ Or use the helper script:
 ## UI overview
 The top control panel is organized in rows.
 
-1) Mode and simulation controls
-- Mode: Choose one of the automaton modes
-- Start: Toggle run/pause
-- Step: Advance one generation
-- Clear: Clear grid to empty state
-- Reset: Reset to the mode's initial state
+1) **Mode & simulation controls**
+  - Mode: Choose an automaton.
+  - Start: Toggle run/pause (`Space`).
+  - Step: Advance one generation (`S`).
+  - Clear: Clear the grid (`C`).
+  - Reset: Return to the mode's initial state.
 
-2) Patterns and file actions
-- Pattern: Select a pattern (auto-loads when selected)
-- Save: Save current grid to a JSON file
-- Load File: Load a saved JSON pattern
-- Export PNG: Save a PNG snapshot (requires Pillow)
+2) **Patterns & persistence**
+  - Pattern: Select a preset; it loads immediately.
+  - Save: Write the current grid to JSON.
+  - Load File: Load a saved pattern.
+  - Export PNG: Save a snapshot (button appears when Pillow is installed).
 
-3) Grid size
-- Presets: 50x50, 100x100, 150x150, 200x200, Custom
-- W/H + Apply: Set custom dimensions (10–500)
+3) **Custom rules** *(visible in Custom Rules mode)*
+  - B field: Digits for birth neighbor counts.
+  - S field: Digits for survival neighbor counts.
+  - Apply Rules: Apply the values and restart the automaton.
 
-4) Drawing tools and symmetry
-- Draw mode: Toggle, Pen, Eraser
-- Symmetry: None, Horizontal, Vertical, Both, Radial
+4) **Grid size**
+  - Presets: 50×50, 100×100, 150×150, 200×200, Custom.
+  - Custom width/height (10–500) plus Apply.
 
-5) Speed and display
-- Speed: Simulation speed (higher = faster)
-- Toggle Grid: Show/hide gridlines
-- Generation: Current generation count
+5) **Drawing tools & symmetry**
+  - Draw mode: Toggle, Pen, Eraser.
+  - Symmetry: None, Horizontal, Vertical, Both, Radial.
 
-Canvas: The large white area where the automaton is displayed.
+6) **Speed & stats**
+  - Speed slider: Adjust simulation speed.
+  - Toggle Grid: Show/hide gridlines (`G`).
+  - Statistics label: Live cells, delta, peak, density.
+
+Canvas: The large white area renders the automaton.
 
 ---
 
@@ -103,17 +111,17 @@ Note: When switching modes, the first pattern in the list is selected by default
 ---
 
 ## Drawing on the grid
-- Toggle mode: Clicking a cell flips it between active/inactive
-- Pen mode: Clicking/dragging paints active cells
-- Eraser mode: Clicking/dragging clears cells
+- Toggle mode: Clicking a cell flips it between active/inactive.
+- Pen mode: Clicking/dragging paints active cells.
+- Eraser mode: Clicking/dragging clears cells.
 
-Symmetry options affect every click/drag:
-- Horizontal: Mirrors across the vertical axis
-- Vertical: Mirrors across the horizontal axis
-- Both: Four-way mirroring
-- Radial: 4-way rotation around the center
+Symmetry options mirror each action:
+- Horizontal: Mirror across the vertical axis.
+- Vertical: Mirror across the horizontal axis.
+- Both: Four-way mirroring.
+- Radial: Four-way rotation around the center.
 
-Tip: For precise editing, temporarily disable simulation (Stop) and enable grid lines.
+Tip: For precise editing, pause the simulation and enable grid lines.
 
 ---
 

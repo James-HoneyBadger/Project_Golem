@@ -89,7 +89,8 @@ class RainbowGame(CellularAutomaton):
             boundary="wrap",
         )
 
-        survive_mask = alive_mask & ((neighbor_count == 2) | (neighbor_count == 3))
+        neighbors_2_or_3 = (neighbor_count == 2) | (neighbor_count == 3)
+        survive_mask = alive_mask & neighbors_2_or_3
         birth_mask = (~alive_mask) & (neighbor_count == 3)
 
         new_grid = np.zeros_like(self.grid)
