@@ -11,6 +11,48 @@ from tkinter import ttk
 from .config import DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH, MODE_PATTERNS
 
 
+class Tooltip:
+    """Simple tooltip implementation for Tkinter widgets."""
+
+    def __init__(self, widget: tk.Widget, text: str) -> None:
+        self.widget = widget
+        self.text = text
+        self.tooltip_window = None
+        self.widget.bind("<Enter>", self.show_tooltip)
+        self.widget.bind("<Leave>", self.hide_tooltip)
+
+    def show_tooltip(self, event: tk.Event[tk.Misc]) -> None:
+        """Display the tooltip near the widget."""
+        if self.tooltip_window:
+            return
+        x, y, _, _ = self.widget.bbox("insert")
+        x += self.widget.winfo_rootx() + 25
+        y += self.widget.winfo_rooty() + 25
+        self.tooltip_window = tk.Toplevel(self.widget)
+        self.tooltip_window.wm_overrideredirect(True)
+        self.tooltip_window.wm_geometry(f"+{x}+{y}")
+        label = tk.Label(
+            self.tooltip_window,
+            text=self.text,
+            background="#ffffe0",
+            relief="solid",
+            borderwidth=1,
+            font=("Arial", 10),
+        )
+        label.pack()
+
+    def hide_tooltip(self, event: tk.Event[tk.Misc]) -> None:
+        """Hide the tooltip."""
+        if self.tooltip_window:
+            self.tooltip_window.destroy()
+            self.tooltip_window = None
+
+
+# pylint: disable=too-many-instance-attributes
+@dataclass
+class TkVars:
+
+
 # pylint: disable=too-many-instance-attributes
 @dataclass
 class TkVars:
@@ -158,6 +200,7 @@ def _add_automaton_section(
         values=list(MODE_PATTERNS.keys()),
     )
     mode_combo.pack(fill=tk.X, pady=(2, 6))
+    Tooltip(mode_combo, "Select the type of cellular automaton to simulate")
     mode_combo.bind(
         "<<ComboboxSelected>>",
         lambda _event: callbacks.switch_mode(variables.mode.get()),
@@ -170,6 +213,7 @@ def _add_automaton_section(
         state="readonly",
     )
     pattern_combo.pack(fill=tk.X, pady=(2, 6))
+    Tooltip(pattern_combo, "Choose a preset pattern to load")
     pattern_combo.bind(
         "<<ComboboxSelected>>",
         lambda _event: callbacks.load_pattern(),
@@ -177,23 +221,20 @@ def _add_automaton_section(
 
     row = ttk.Frame(mode_frame)
     row.pack(fill=tk.X, pady=(4, 0))
-    ttk.Button(row, text="Save", command=callbacks.save_pattern).pack(
-        side=tk.LEFT,
-        expand=True,
-        fill=tk.X,
-        padx=(0, 4),
-    )
-    ttk.Button(row, text="Load", command=callbacks.load_saved_pattern).pack(
-        side=tk.LEFT,
-        expand=True,
-        fill=tk.X,
-    )
+    save_button = ttk.Button(row, text="Save", command=callbacks.save_pattern)
+    save_button.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=(0, 4))
+    Tooltip(save_button, "Save the current grid as a JSON file")
+    load_button = ttk.Button(row, text="Load", command=callbacks.load_saved_pattern)
+    load_button.pack(side=tk.LEFT, expand=True, fill=tk.X)
+    Tooltip(load_button, "Load a pattern from a JSON file")
     if show_export:
-        ttk.Button(
+        export_button = ttk.Button(
             mode_frame,
             text="Export PNG",
             command=callbacks.export_png,
-        ).pack(fill=tk.X, pady=(6, 0))
+        )
+        export_button.pack(fill=tk.X, pady=(6, 0))
+        Tooltip(export_button, "Export the current grid as a PNG image")
 
     return pattern_combo
 
@@ -225,36 +266,37 @@ def _add_simulation_section(
         relief=tk.FLAT,
     )
     start_button.pack(side=tk.LEFT, padx=(0, 6))
+    Tooltip(start_button, "Start or stop the simulation (Space)")
 
-    ttk.Button(
+    step_button = ttk.Button(
         toolbar,
         text="Step",
         command=callbacks.step_once,
         width=7,
-    ).pack(
-        side=tk.LEFT,
     )
-    ttk.Button(
+    step_button.pack(side=tk.LEFT)
+    Tooltip(step_button, "Advance one generation (S)")
+
+    clear_button = ttk.Button(
         toolbar,
         text="Clear",
         command=callbacks.clear_grid,
         width=7,
-    ).pack(
-        side=tk.LEFT,
-        padx=(6, 0),
     )
-    ttk.Button(
+    clear_button.pack(side=tk.LEFT, padx=(6, 0))
+    Tooltip(clear_button, "Clear the grid (C)")
+
+    reset_button = ttk.Button(
         toolbar,
         text="Reset",
         command=callbacks.reset_simulation,
         width=7,
-    ).pack(
-        side=tk.LEFT,
-        padx=(6, 0),
     )
+    reset_button.pack(side=tk.LEFT, padx=(6, 0))
+    Tooltip(reset_button, "Reset to initial pattern")
 
     ttk.Label(frame, text="Speed").pack(anchor=tk.W, pady=(8, 2))
-    tk.Scale(
+    speed_scale = tk.Scale(
         frame,
         from_=1,
         to=100,
@@ -262,12 +304,13 @@ def _add_simulation_section(
         variable=variables.speed,
         length=200,
         showvalue=False,
-    ).pack(fill=tk.X)
-
-    ttk.Button(frame, text="Toggle Grid", command=callbacks.toggle_grid).pack(
-        fill=tk.X,
-        pady=(8, 0),
     )
+    speed_scale.pack(fill=tk.X)
+    Tooltip(speed_scale, "Adjust simulation speed (higher = faster)")
+
+    grid_button = ttk.Button(frame, text="Toggle Grid", command=callbacks.toggle_grid)
+    grid_button.pack(fill=tk.X, pady=(8, 0))
+    Tooltip(grid_button, "Show/hide grid lines (G)")
 
     gen_label = ttk.Label(
         frame,
@@ -316,9 +359,11 @@ def _add_custom_rules_section(
     ttk.Label(row, text="B").pack(side=tk.LEFT)
     birth_entry = ttk.Entry(row, width=8)
     birth_entry.pack(side=tk.LEFT, padx=(4, 12))
+    Tooltip(birth_entry, "Birth rule: digits for neighbor counts that create life")
     ttk.Label(row, text="S").pack(side=tk.LEFT)
     survival_entry = ttk.Entry(row, width=8)
     survival_entry.pack(side=tk.LEFT, padx=(4, 0))
+    Tooltip(survival_entry, "Survival rule: digits for neighbor counts that sustain life")
 
     apply_button = ttk.Button(
         frame,
@@ -326,6 +371,7 @@ def _add_custom_rules_section(
         command=callbacks.apply_custom_rules,
     )
     apply_button.pack(fill=tk.X, pady=(6, 0))
+    Tooltip(apply_button, "Apply the custom birth/survival rules")
 
     return birth_entry, survival_entry, apply_button
 
@@ -352,31 +398,35 @@ def _add_grid_section(
         values=["50x50", "100x100", "150x150", "200x200", "Custom"],
     )
     size_combo.pack(fill=tk.X, pady=(2, 6))
+    Tooltip(size_combo, "Choose a preset grid size")
     size_combo.bind("<<ComboboxSelected>>", callbacks.size_preset_changed)
 
     row = ttk.Frame(frame)
     row.pack(fill=tk.X)
     ttk.Label(row, text="W").pack(side=tk.LEFT)
-    tk.Spinbox(
+    width_spin = tk.Spinbox(
         row,
         from_=10,
         to=500,
         textvariable=variables.custom_width,
         width=5,
-    ).pack(side=tk.LEFT, padx=(4, 12))
+    )
+    width_spin.pack(side=tk.LEFT, padx=(4, 12))
+    Tooltip(width_spin, "Custom grid width (10-500)")
     ttk.Label(row, text="H").pack(side=tk.LEFT)
-    tk.Spinbox(
+    height_spin = tk.Spinbox(
         row,
         from_=10,
         to=500,
         textvariable=variables.custom_height,
         width=5,
-    ).pack(side=tk.LEFT, padx=(4, 0))
-
-    ttk.Button(frame, text="Apply", command=callbacks.apply_custom_size).pack(
-        fill=tk.X,
-        pady=(6, 0),
     )
+    height_spin.pack(side=tk.LEFT, padx=(4, 0))
+    Tooltip(height_spin, "Custom grid height (10-500)")
+
+    apply_size_button = ttk.Button(frame, text="Apply", command=callbacks.apply_custom_size)
+    apply_size_button.pack(fill=tk.X, pady=(6, 0))
+    Tooltip(apply_size_button, "Apply custom grid dimensions")
 
 
 def _add_drawing_section(parent: ttk.Frame, variables: TkVars) -> None:
@@ -392,32 +442,40 @@ def _add_drawing_section(parent: ttk.Frame, variables: TkVars) -> None:
     ttk.Label(frame, text="Tool").pack(anchor=tk.W)
     row = ttk.Frame(frame)
     row.pack(anchor=tk.W, pady=(2, 6))
-    ttk.Radiobutton(
+    toggle_radio = ttk.Radiobutton(
         row,
         text="Toggle",
         variable=variables.draw_mode,
         value="toggle",
-    ).pack(side=tk.LEFT)
-    ttk.Radiobutton(
+    )
+    toggle_radio.pack(side=tk.LEFT)
+    Tooltip(toggle_radio, "Click to toggle cells on/off")
+    pen_radio = ttk.Radiobutton(
         row,
         text="Pen",
         variable=variables.draw_mode,
         value="pen",
-    ).pack(side=tk.LEFT, padx=(8, 0))
-    ttk.Radiobutton(
+    )
+    pen_radio.pack(side=tk.LEFT, padx=(8, 0))
+    Tooltip(pen_radio, "Click and drag to draw live cells")
+    eraser_radio = ttk.Radiobutton(
         row,
         text="Eraser",
         variable=variables.draw_mode,
         value="eraser",
-    ).pack(side=tk.LEFT, padx=(8, 0))
+    )
+    eraser_radio.pack(side=tk.LEFT, padx=(8, 0))
+    Tooltip(eraser_radio, "Click and drag to erase cells")
 
     ttk.Label(frame, text="Symmetry").pack(anchor=tk.W)
-    ttk.Combobox(
+    symmetry_combo = ttk.Combobox(
         frame,
         textvariable=variables.symmetry,
         state="readonly",
         values=["None", "Horizontal", "Vertical", "Both", "Radial"],
-    ).pack(fill=tk.X, pady=(2, 0))
+    )
+    symmetry_combo.pack(fill=tk.X, pady=(2, 0))
+    Tooltip(symmetry_combo, "Mirror drawing actions across axes")
 
 
 def _add_canvas_area(parent: ttk.Frame, callbacks: Callbacks) -> tk.Canvas:

@@ -51,10 +51,37 @@ class SimulationState:
         self.population_peak = max(self.population_peak, live_cells)
         total = grid.size if grid.size else 1
         density = (live_cells / total) * 100
+        
+        # Calculate entropy (Shannon entropy of the grid)
+        if live_cells > 0 and live_cells < total:
+            p_live = live_cells / total
+            p_dead = 1 - p_live
+            entropy = -(p_live * np.log2(p_live) + p_dead * np.log2(p_dead))
+        else:
+            entropy = 0.0
+        
+        # Calculate complexity (number of different 3x3 patterns)
+        complexity = self._calculate_complexity(grid)
+        
         parts = [
             f"Live: {live_cells}",
             f"Δ: {delta:+d}",
             f"Peak: {self.population_peak}",
+            f"Density: {density:.1f}%",
+            f"Entropy: {entropy:.2f}",
+            f"Complexity: {complexity}",
         ]
-        stats = " | ".join(parts)
-        return f"{stats} | Density: {density:.1f}%"
+        return " | ".join(parts)
+
+    def _calculate_complexity(self, grid: np.ndarray) -> int:
+        """Calculate the number of unique 3x3 patterns in the grid."""
+        if grid.size < 9:
+            return 0
+        
+        patterns = set()
+        h, w = grid.shape
+        for i in range(h - 2):
+            for j in range(w - 2):
+                pattern = tuple(grid[i:i+3, j:j+3].flatten())
+                patterns.add(pattern)
+        return len(patterns)

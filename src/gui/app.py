@@ -312,24 +312,52 @@ class AutomatonApp:
                 "Switch to Custom Rules to apply B/S settings.",
             )
             return
+        
+        birth_text = self.widgets.birth_entry.get().strip()
+        survival_text = self.widgets.survival_entry.get().strip()
+        
+        # Validate input
+        if not birth_text and not survival_text:
+            messagebox.showerror(
+                "Invalid Input",
+                "At least one of birth or survival rules must be specified.",
+            )
+            return
+        
         try:
-            birth = self.widgets.birth_entry.get().strip()
-            survival = self.widgets.survival_entry.get().strip()
-            birth_set = {int(ch) for ch in birth if ch.isdigit()}
-            survival_set = {int(ch) for ch in survival if ch.isdigit()}
+            birth_set = {int(ch) for ch in birth_text if ch.isdigit()}
+            survival_set = {int(ch) for ch in survival_text if ch.isdigit()}
+            
+            # Check for valid neighbor counts (0-8)
+            invalid_birth = birth_set - set(range(9))
+            invalid_survival = survival_set - set(range(9))
+            if invalid_birth or invalid_survival:
+                invalid = sorted(invalid_birth | invalid_survival)
+                messagebox.showerror(
+                    "Invalid Input",
+                    f"Neighbor counts must be between 0-8. Invalid: {invalid}",
+                )
+                return
+                
         except ValueError as exc:
             messagebox.showerror(
                 "Invalid Input",
                 f"Failed to parse rules: {exc}",
             )
             return
-        self.custom_birth = set(birth_set)
-        self.custom_survival = set(survival_set)
+        
+        self.custom_birth = birth_set
+        self.custom_survival = survival_set
         automaton.set_rules(self.custom_birth, self.custom_survival)
         automaton.reset()
         self.state.reset_generation()
         self._update_generation_label()
         self._update_display()
+        
+        messagebox.showinfo(
+            "Rules Applied",
+            f"Birth: {sorted(birth_set)}\nSurvival: {sorted(survival_set)}",
+        )
 
     # ------------------------------------------------------------------
     # Grid size helpers
@@ -413,20 +441,55 @@ class AutomatonApp:
         )
         if not filename:
             return
+        
         try:
             with open(filename, "r", encoding="utf-8") as handle:
                 data = json.load(handle)
         except (OSError, json.JSONDecodeError) as exc:
             messagebox.showerror(
                 "Load Failed",
-                f"Could not read pattern: {exc}",
+                f"Could not read file '{filename}': {exc}",
             )
             return
 
-        mode = data.get("mode", "Conway's Game of Life")
-        width = int(data.get("width", self.state.grid_width))
-        height = int(data.get("height", self.state.grid_height))
-        grid_data = np.array(data.get("grid", []), dtype=int)
+        # Validate required fields
+        required_fields = ["mode", "width", "height", "grid"]
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            messagebox.showerror(
+                "Invalid File",
+                f"Missing required fields: {missing_fields}",
+            )
+            return
+
+        try:
+            mode = data["mode"]
+            width = int(data["width"])
+            height = int(data["height"])
+            grid_data = np.array(data["grid"], dtype=int)
+        except (ValueError, KeyError) as exc:
+            messagebox.showerror(
+                "Invalid Data",
+                f"Invalid data format: {exc}",
+            )
+            return
+
+        # Validate dimensions
+        if width < 10 or width > MAX_GRID_SIZE or height < 10 or height > MAX_GRID_SIZE:
+            messagebox.showerror(
+                "Invalid Size",
+                f"Grid size must be between 10x10 and {MAX_GRID_SIZE}x{MAX_GRID_SIZE}",
+            )
+            return
+
+        # Validate grid data
+        expected_size = width * height
+        if grid_data.size != expected_size:
+            messagebox.showerror(
+                "Invalid Grid",
+                f"Grid data size ({grid_data.size}) doesn't match dimensions ({width}x{height} = {expected_size})",
+            )
+            return
 
         self.state.grid_width = width
         self.state.grid_height = height
@@ -435,35 +498,35 @@ class AutomatonApp:
 
         automaton = self.state.current_automaton
         if isinstance(automaton, LifeLikeAutomaton):
-            birth = data.get("birth")
-            survival = data.get("survival")
-            if isinstance(birth, Iterable) and isinstance(survival, Iterable):
+            birth = data.get("birth", [])
+            survival = data.get("survival", [])
+            try:
                 birth_set = {int(value) for value in birth}
                 survival_set = {int(value) for value in survival}
                 self.custom_birth = birth_set
                 self.custom_survival = survival_set
                 automaton.set_rules(birth_set, survival_set)
                 self._sync_custom_entries()
-
-        if grid_data.size:
-            expected_shape = (self.state.grid_height, self.state.grid_width)
-            try:
-                automaton.grid = grid_data.reshape(
-                    expected_shape
-                )  # type: ignore[attr-defined]
-            except ValueError:
+            except (ValueError, TypeError):
                 messagebox.showwarning(
-                    "Shape Mismatch",
-                    (
-                        "Saved grid size did not match current settings. "
-                        "Resetting grid."
-                    ),
+                    "Invalid Rules",
+                    "Could not load custom rules, using defaults.",
                 )
-                automaton.reset()
+
+        try:
+            expected_shape = (self.state.grid_height, self.state.grid_width)
+            automaton.grid = grid_data.reshape(expected_shape)
+        except ValueError:
+            messagebox.showwarning(
+                "Shape Mismatch",
+                "Saved grid size did not match current settings. Resetting grid.",
+            )
+            automaton.reset()
+        
         self.state.reset_generation()
         self._update_generation_label()
         self._update_display()
-        messagebox.showinfo("Loaded", "Pattern loaded successfully.")
+        messagebox.showinfo("Loaded", f"Pattern loaded from {filename}")
 
     def export_png(self) -> None:
         """Export the current grid as a Pillow PNG image."""
