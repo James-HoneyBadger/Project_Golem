@@ -1,5 +1,5 @@
-git clone https://github.com/James-HoneyBadger/HB_Game_Of_Life.git
-## Cellular Automaton Simulator
+git clone https://github.com/James-HoneyBadger/Project_Golem.git
+## Project Golem
 
 An interactive Tkinter-based workbench for experimenting with cellular
 automata. The simulator ships with several classic rules, a custom B/S rule
@@ -94,7 +94,7 @@ Mouse interactions:
 ## Project Structure
 
 ```
-HB_Game_Of_Life/
+Project_Golem/
 ├── src/
 │   ├── automata/        # Automaton implementations
 │   ├── gui/             # GUI modules (app, config, state, ui, rendering)

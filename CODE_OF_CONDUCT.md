@@ -1,10 +1,10 @@
-# Code of Conduct
+# Project Golem Code of Conduct
 
 ## Our Pledge
 
 In the interest of fostering an open and welcoming environment, we as
-contributors and maintainers pledge to make participation in the HB Game Of
-Life project a harassment-free experience for everyone, regardless of age, body
+contributors and maintainers pledge to make participation in the Project Golem
+project a harassment-free experience for everyone, regardless of age, body
 size, disability, ethnicity, sex characteristics, gender identity and
 expression, level of experience, education, socio-economic status, nationality,
 personal appearance, race, religion, or sexual identity and orientation.
@@ -59,7 +59,7 @@ representative at an online or offline event.
 
 ## Learning and Exploration Context
 
-HB Game Of Life is designed to help people explore cellular automata and
+Project Golem is designed to help people explore cellular automata and
 simulation concepts. We place special emphasis on:
 
 * Creating a welcoming environment for experimentation and curiosity
@@ -146,5 +146,5 @@ For questions or concerns about this Code of Conduct, please contact:
 **James Temple**
 Honey Badger Universe
 Email: james@honey-badger.org
-Project: HB Game Of Life
-GitHub: https://github.com/James-HoneyBadger/HB_Game_Of_Life
+Project: Project Golem
+GitHub: https://github.com/James-HoneyBadger/Project_Golem

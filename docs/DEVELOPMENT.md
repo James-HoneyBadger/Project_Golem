@@ -4,7 +4,7 @@ This document helps you navigate the codebase and contribute changes.
 
 ## Project structure
 ```
-HB_Game_Of_Life/
+Project_Golem/
 ├── src/
 │   └── main.py           # Main application (GUI + automata implementations)
 ├── examples/             # Example pattern files (JSON)

@@ -1,7 +1,6 @@
-# Cellular Automaton Simulator — User Guide
+# Project Golem — User Guide
 
-This guide explains how to install, run, and use the Cellular Automaton
-Simulator. It summarizes controls, available modes, drawing tools, and
+This guide explains how to install, run, and use Project Golem. It summarizes controls, available modes, drawing tools, and
 workflow tips for saving and exporting.
 
 ## What it is
