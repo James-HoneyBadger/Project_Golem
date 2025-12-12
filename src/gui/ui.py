@@ -17,7 +17,7 @@ class Tooltip:
     def __init__(self, widget: tk.Widget, text: str) -> None:
         self.widget = widget
         self.text = text
-        self.tooltip_window = None
+        self.tooltip_window: tk.Toplevel | None = None
         self.widget.bind("<Enter>", self.show_tooltip)
         self.widget.bind("<Leave>", self.hide_tooltip)
 
@@ -25,9 +25,9 @@ class Tooltip:
         """Display the tooltip near the widget."""
         if self.tooltip_window:
             return
-        x, y, _, _ = self.widget.bbox("insert")
-        x += self.widget.winfo_rootx() + 25
-        y += self.widget.winfo_rooty() + 25
+        # Get widget position from event
+        x = event.x_root + 10
+        y = event.y_root + 10
         self.tooltip_window = tk.Toplevel(self.widget)
         self.tooltip_window.wm_overrideredirect(True)
         self.tooltip_window.wm_geometry(f"+{x}+{y}")
@@ -41,7 +41,7 @@ class Tooltip:
         )
         label.pack()
 
-    def hide_tooltip(self, event: tk.Event[tk.Misc]) -> None:
+    def hide_tooltip(self, event: tk.Event[tk.Misc]) -> None:  # pylint: disable=unused-argument
         """Hide the tooltip."""
         if self.tooltip_window:
             self.tooltip_window.destroy()
@@ -66,17 +66,20 @@ class TkVars:
 # pylint: disable=too-many-instance-attributes
 @dataclass
 class Widgets:
-    """References to widgets that the application interacts with later."""
+    """References to widgets that the application interacts with later.
 
-    start_button: tk.Button
+    Use generic `tk.Widget` for type compatibility across `tk` and `ttk`.
+    """
+
+    start_button: tk.Widget
     pattern_combo: ttk.Combobox
     birth_entry: tk.Entry
     survival_entry: tk.Entry
-    apply_rules_button: tk.Button
-    gen_label: tk.Label
-    population_label: tk.Label
+    apply_rules_button: tk.Widget
+    gen_label: tk.Widget
+    population_label: tk.Widget
     population_canvas: tk.Canvas
-    cycle_label: tk.Label
+    cycle_label: tk.Widget
     canvas: tk.Canvas
 
 
@@ -154,8 +157,15 @@ def _add_menubar(root: tk.Tk, callbacks: Callbacks) -> None:
 
     menubar = tk.Menu(root)
     help_menu = tk.Menu(menubar, tearoff=0)
-    help_menu.add_command(label="About LifeGrid", command=lambda: callbacks.toggle_grid() or None)
-    # Placeholder: actual About handler is implemented in app; here we call a dedicated method via callbacks if present
+    help_menu.add_command(
+        label="About LifeGrid",
+        command=lambda: (
+            None
+            if callbacks.toggle_grid() else None  # type: ignore[func-returns-value]
+        ),
+    )
+    # Placeholder: actual About handler is implemented in app
+    # here we call a dedicated method via callbacks if present
     menubar.add_cascade(label="Help", menu=help_menu)
     root.config(menu=menubar)
 
@@ -334,7 +344,9 @@ def _add_simulation_section(
     return start_button, gen_label
 
 
-def _add_population_section(parent: ttk.Frame, callbacks: Callbacks) -> tuple[ttk.Label, tk.Canvas, ttk.Label]:
+def _add_population_section(
+    parent: ttk.Frame, callbacks: Callbacks
+) -> tuple[ttk.Label, tk.Canvas, ttk.Label]:
     """Add the population stats card, chart, and export button."""
 
     frame = ttk.Labelframe(
@@ -351,9 +363,14 @@ def _add_population_section(parent: ttk.Frame, callbacks: Callbacks) -> tuple[tt
     )
     label.pack(anchor=tk.W)
 
-    chart = tk.Canvas(frame, height=80, width=240, bg="#f8f8f8", highlightthickness=1, highlightbackground="#ccc")
+    chart = tk.Canvas(
+        frame, height=80, width=240, bg="#f8f8f8",
+        highlightthickness=1, highlightbackground="#ccc"
+    )
     chart.pack(fill=tk.X, pady=(6, 4))
-    Tooltip(chart, "Recent history of live cells / entropy / complexity")
+    Tooltip(
+        chart, "Recent history of live cells / entropy / complexity"
+    )
 
     cycle_label = ttk.Label(frame, text="Cycle: –", foreground="#555")
     cycle_label.pack(anchor=tk.W, pady=(2, 0))
@@ -383,11 +400,17 @@ def _add_custom_rules_section(
     ttk.Label(row, text="B").pack(side=tk.LEFT)
     birth_entry = ttk.Entry(row, width=8)
     birth_entry.pack(side=tk.LEFT, padx=(4, 12))
-    Tooltip(birth_entry, "Birth rule: digits for neighbor counts that create life")
+    Tooltip(
+        birth_entry,
+        "Birth rule: digits for neighbor counts that create life"
+    )
     ttk.Label(row, text="S").pack(side=tk.LEFT)
     survival_entry = ttk.Entry(row, width=8)
     survival_entry.pack(side=tk.LEFT, padx=(4, 0))
-    Tooltip(survival_entry, "Survival rule: digits for neighbor counts that sustain life")
+    Tooltip(
+        survival_entry,
+        "Survival rule: digits for neighbor counts that sustain life"
+    )
 
     apply_button = ttk.Button(
         frame,

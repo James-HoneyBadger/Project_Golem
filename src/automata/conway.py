@@ -365,7 +365,7 @@ class ConwayGameOfLife(CellularAutomaton):
         ).astype(int)
 
     def get_grid(self) -> np.ndarray:
-        return self.grid
+        return self.grid  # type: ignore[no-any-return]
 
     def handle_click(self, x: int, y: int) -> None:
         self.grid[y, x] = 1 - self.grid[y, x]

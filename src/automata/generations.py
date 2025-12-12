@@ -11,7 +11,10 @@ from .base import CellularAutomaton
 
 
 class GenerationsAutomaton(CellularAutomaton):
-    """Life-like birth/survival with N fading states (1 stays alive, 2..N-1 decay)."""
+    """Life-like birth/survival with N fading states.
+
+    State 1 stays alive, states 2..N-1 decay, then fade to 0.
+    """
 
     def __init__(
         self,
@@ -31,12 +34,19 @@ class GenerationsAutomaton(CellularAutomaton):
         self.grid = np.zeros((self.height, self.width), dtype=int)
 
     def load_pattern(self, pattern_name: str) -> None:
+        """Load a named pattern into the grid."""
         self.reset()
         if pattern_name == "Random Soup":
             mask = np.random.random(self.grid.shape) < 0.15
             self.grid[mask] = 1
 
-    def set_rules(self, birth: Iterable[int], survival: Iterable[int], n_states: int | None = None) -> None:
+    def set_rules(
+        self,
+        birth: Iterable[int],
+        survival: Iterable[int],
+        n_states: int | None = None,
+    ) -> None:
+        """Set birth/survival rules and optionally change state count."""
         self.birth = set(birth)
         self.survival = set(survival)
         if n_states:
@@ -74,9 +84,11 @@ class GenerationsAutomaton(CellularAutomaton):
         self.grid = new_grid
 
     def get_grid(self) -> np.ndarray:
-        return self.grid
+        return self.grid  # type: ignore[no-any-return]
 
     def handle_click(self, x: int, y: int) -> None:
+        """Toggle cell state at the given coordinates."""
+        self.grid[y, x] = (self.grid[y, x] + 1) % self.n_states
         """Toggle a cell to live or dead."""
 
         self.grid[y, x] = 0 if self.grid[y, x] else 1

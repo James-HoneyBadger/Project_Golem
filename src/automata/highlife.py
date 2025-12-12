@@ -60,7 +60,7 @@ class HighLife(CellularAutomaton):
 
     def get_grid(self) -> np.ndarray:
         """Return the current grid state."""
-        return self.grid
+        return self.grid  # type: ignore[no-any-return]
 
     def handle_click(self, x: int, y: int) -> None:
         """Toggle a single cell between alive and dead."""

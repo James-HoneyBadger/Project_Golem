@@ -118,7 +118,7 @@ class SimulationState:
         """Calculate the number of unique 3x3 patterns in the grid."""
         if grid.size < 9:
             return 0
-        
+
         patterns = set()
         h, w = grid.shape
         for i in range(h - 2):

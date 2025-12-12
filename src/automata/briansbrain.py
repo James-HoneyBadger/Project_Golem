@@ -48,7 +48,7 @@ class BriansBrain(CellularAutomaton):
         self.grid = new_grid
 
     def get_grid(self) -> np.ndarray:
-        return self.grid
+        return self.grid  # type: ignore[no-any-return]
 
     def handle_click(self, x: int, y: int) -> None:
         """Toggle between off and firing for easy painting."""

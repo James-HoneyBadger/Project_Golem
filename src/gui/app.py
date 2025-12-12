@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+import csv
 import json
-from typing import Iterable
 
 import tkinter as tk
 from tkinter import filedialog, messagebox
@@ -14,9 +14,6 @@ from automata import LifeLikeAutomaton
 from version import __version__ as LIFEGRID_VERSION
 
 from .config import (
-    DEFAULT_CANVAS_HEIGHT,
-    DEFAULT_CANVAS_WIDTH,
-    DEFAULT_CELL_SIZE,
     DEFAULT_CUSTOM_BIRTH,
     DEFAULT_CUSTOM_SURVIVAL,
     DEFAULT_SPEED,
@@ -31,20 +28,19 @@ from .state import SimulationState
 from .ui import Callbacks, TkVars, Widgets, build_ui
 
 try:
-    from PIL import Image
-
+    from PIL import Image as PILImage
     PIL_AVAILABLE = True
 except ImportError:
-    Image = None
+    PILImage = None  # type: ignore[assignment]
     PIL_AVAILABLE = False
 
 
 def _nearest_resample_filter() -> object | None:
     """Return the Pillow nearest-neighbour filter if available."""
 
-    if not (PIL_AVAILABLE and Image):
+    if not (PIL_AVAILABLE and PILImage):
         return None
-    resampling = getattr(Image, "Resampling", Image)
+    resampling = getattr(PILImage, "Resampling", PILImage)
     return getattr(resampling, "NEAREST", None)
 
 
@@ -79,7 +75,7 @@ class AutomatonApp:
             toggle_grid=self.toggle_grid,
             on_canvas_click=self.on_canvas_click,
             on_canvas_drag=self.on_canvas_drag,
-            
+
         )
         self.widgets: Widgets = build_ui(
             root=self.root,
@@ -87,7 +83,9 @@ class AutomatonApp:
             callbacks=callbacks,
             show_export=PIL_AVAILABLE,
         )
-        self.widgets.start_button.configure(command=self.toggle_simulation)
+        self.widgets.start_button.configure(  # type: ignore[call-arg]
+            command=self.toggle_simulation
+        )
         self._widgets_init_defaults()
 
         self.state.show_grid = self.settings.get("show_grid", True)
@@ -121,8 +119,10 @@ class AutomatonApp:
 
         # Safely add menu command if a menubar exists
         try:
-            menu = self.root.nametowidget(self.root["menu"])  # type: ignore[index]
-        except Exception:
+            menu = self.root.nametowidget(
+                self.root["menu"]  # type: ignore[index]
+            )
+        except (KeyError, tk.TclError):
             menu = None
         if not menu:
             # Create a menubar and add Help/About
@@ -146,7 +146,7 @@ class AutomatonApp:
         """Load user settings from file."""
         try:
             with open(self.settings_file, "r", encoding="utf-8") as f:
-                return json.load(f)
+                return json.load(f)  # type: ignore[no-any-return]
         except (FileNotFoundError, json.JSONDecodeError):
             return {}
 
@@ -205,7 +205,7 @@ class AutomatonApp:
             self.widgets.survival_entry,
             self.widgets.apply_rules_button,
         ):
-            widget.configure(state=state)
+            widget.configure(state=state)  # type: ignore[call-arg]
 
     # ------------------------------------------------------------------
     # Automaton control
@@ -215,7 +215,7 @@ class AutomatonApp:
 
         self.stop_simulation()
         if mode_name == "Custom Rules":
-            self.state.current_automaton = LifeLikeAutomaton(
+            automaton = LifeLikeAutomaton(
                 self.state.grid_width,
                 self.state.grid_height,
                 self.custom_birth,
@@ -234,7 +234,7 @@ class AutomatonApp:
         self.widgets.pattern_combo["values"] = patterns
         self.tk_vars.pattern.set(patterns[0])
 
-        automaton = self.state.current_automaton
+        automaton = self.state.current_automaton  # type: ignore[assignment]
         if patterns:
             first_pattern = patterns[0]
         else:
@@ -280,16 +280,20 @@ class AutomatonApp:
 
         self.state.running = not self.state.running
         if self.state.running:
-            self.widgets.start_button.config(text="Stop", bg="#ff9800")
+            self.widgets.start_button.config(  # type: ignore[attr-defined]
+                text="Stop", bg="#ff9800"
+            )
             self.root.after(0, self._run_simulation_loop)
         else:
-            self.widgets.start_button.config(text="Start", bg="#4caf50")
+            self.widgets.start_button.config(  # type: ignore[attr-defined]
+                text="Start", bg="#4caf50"
+            )
 
     def stop_simulation(self) -> None:
         """Force the simulation into a stopped state."""
 
         self.state.running = False
-        self.widgets.start_button.config(text="Start", bg="#4caf50")
+        self.widgets.start_button.config(text="Start", bg="#4caf50")  # type: ignore[attr-defined]
 
     def _run_simulation_loop(self) -> None:
         """Advance the automaton while the simulation is marked running."""
@@ -313,7 +317,7 @@ class AutomatonApp:
 
     def _update_generation_label(self) -> None:
         generation_text = f"Generation: {self.state.generation}"
-        self.widgets.gen_label.config(text=generation_text)
+        self.widgets.gen_label.config(text=generation_text)  # type: ignore[attr-defined]
 
     def reset_simulation(self) -> None:
         """Reset the automaton grid to its starting state."""
@@ -349,10 +353,10 @@ class AutomatonApp:
                 "Switch to Custom Rules to apply B/S settings.",
             )
             return
-        
+
         birth_text = self.widgets.birth_entry.get().strip()
         survival_text = self.widgets.survival_entry.get().strip()
-        
+
         # Validate input
         if not birth_text and not survival_text:
             messagebox.showerror(
@@ -360,11 +364,11 @@ class AutomatonApp:
                 "At least one of birth or survival rules must be specified.",
             )
             return
-        
+
         try:
             birth_set = {int(ch) for ch in birth_text if ch.isdigit()}
             survival_set = {int(ch) for ch in survival_text if ch.isdigit()}
-            
+
             # Check for valid neighbor counts (0-8)
             invalid_birth = birth_set - set(range(9))
             invalid_survival = survival_set - set(range(9))
@@ -375,14 +379,14 @@ class AutomatonApp:
                     f"Neighbor counts must be between 0-8. Invalid: {invalid}",
                 )
                 return
-                
+
         except ValueError as exc:
             messagebox.showerror(
                 "Invalid Input",
                 f"Failed to parse rules: {exc}",
             )
             return
-        
+
         self.custom_birth = birth_set
         self.custom_survival = survival_set
         automaton.set_rules(self.custom_birth, self.custom_survival)
@@ -390,7 +394,7 @@ class AutomatonApp:
         self.state.reset_generation()
         self._update_generation_label()
         self._update_display()
-        
+
         messagebox.showinfo(
             "Rules Applied",
             f"Birth: {sorted(birth_set)}\nSurvival: {sorted(survival_set)}",
@@ -478,7 +482,7 @@ class AutomatonApp:
         )
         if not filename:
             return
-        
+
         try:
             with open(filename, "r", encoding="utf-8") as handle:
                 data = json.load(handle)
@@ -524,7 +528,10 @@ class AutomatonApp:
         if grid_data.size != expected_size:
             messagebox.showerror(
                 "Invalid Grid",
-                f"Grid data size ({grid_data.size}) doesn't match dimensions ({width}x{height} = {expected_size})",
+                (
+                    f"Grid data size ({grid_data.size}) doesn't match "
+                    f"dimensions ({width}x{height} = {expected_size})"
+                ),
             )
             return
 
@@ -551,15 +558,19 @@ class AutomatonApp:
                 )
 
         try:
-            expected_shape = (self.state.grid_height, self.state.grid_width)
-            automaton.grid = grid_data.reshape(expected_shape)
+            expected_shape = (
+                self.state.grid_height, self.state.grid_width
+            )
+            if automaton is not None:
+                automaton.grid = grid_data.reshape(expected_shape)  # type: ignore[attr-defined]
         except ValueError:
             messagebox.showwarning(
                 "Shape Mismatch",
                 "Saved grid size did not match current settings. Resetting grid.",
             )
-            automaton.reset()
-        
+            if automaton is not None:
+                automaton.reset()
+
         self.state.reset_generation()
         self._update_generation_label()
         self._update_display()
@@ -568,7 +579,7 @@ class AutomatonApp:
     def export_png(self) -> None:
         """Export the current grid as a Pillow PNG image."""
 
-        if not (PIL_AVAILABLE and self.state.current_automaton and Image):
+        if not (PIL_AVAILABLE and self.state.current_automaton and PILImage):
             messagebox.showerror(
                 "Unavailable",
                 "Pillow is required for PNG export.",
@@ -581,7 +592,7 @@ class AutomatonApp:
         if not filename:
             return
         grid = self.state.current_automaton.get_grid()
-        image = Image.new(
+        image = PILImage.new(
             "RGB",
             (self.state.grid_width, self.state.grid_height),
             "white",
@@ -590,7 +601,7 @@ class AutomatonApp:
         for y in range(self.state.grid_height):
             for x in range(self.state.grid_width):
                 value = int(grid[y, x])
-                pixels[x, y] = EXPORT_COLOR_MAP.get(value, (0, 0, 0))
+                pixels[x, y] = EXPORT_COLOR_MAP.get(value, (0, 0, 0))  # type: ignore[index]
         max_dimension = max(
             self.state.grid_width,
             self.state.grid_height,
@@ -598,7 +609,7 @@ class AutomatonApp:
         scale = max(1, 800 // max_dimension)
         image = image.resize(
             (self.state.grid_width * scale, self.state.grid_height * scale),
-            _nearest_resample_filter(),
+            _nearest_resample_filter(),  # type: ignore[arg-type]
         )
         try:
             image.save(filename)
@@ -623,7 +634,7 @@ class AutomatonApp:
             self.state.show_grid,
         )
         stats = self.state.update_population_stats(grid)
-        self.widgets.population_label.config(text=stats)
+        self.widgets.population_label.config(text=stats)  # type: ignore[attr-defined]
         self._update_population_chart()
         self._update_cycle_label()
 
@@ -677,10 +688,14 @@ class AutomatonApp:
                 continue
             if self.tk_vars.draw_mode.get() == "toggle":
                 automaton.handle_click(px, py)
-            elif self.tk_vars.draw_mode.get() == "pen":
-                automaton.grid[py, px] = 1
-            elif self.tk_vars.draw_mode.get() == "eraser":
-                automaton.grid[py, px] = 0
+            elif self.tk_vars.draw_mode.get() == "pen" and hasattr(
+                automaton, 'grid'
+            ):
+                automaton.grid[py, px] = 1  # type: ignore[attr-defined]
+            elif self.tk_vars.draw_mode.get() == "eraser" and hasattr(
+                automaton, 'grid'
+            ):
+                automaton.grid[py, px] = 0  # type: ignore[attr-defined]
 
     # ------------------------------------------------------------------
     # Metrics helpers
@@ -701,16 +716,18 @@ class AutomatonApp:
         height = int(canvas.winfo_height() or 80)
         padding = 4
         # Normalize series to fit height
+
         def normalize(series: list, default_max: float = 1.0) -> list[tuple[int, int]]:
             if not series:
                 return []
             max_val = max(series) or default_max
             span = max_val if max_val else 1.0
-            n = len(series)
             points = []
             for idx, val in enumerate(series[-width:]):
-                x = padding + int((idx / max(1, len(series[-width:]) - 1)) * (width - 2 * padding))
-                y = padding + int((1 - (val / span)) * (height - 2 * padding))
+                x_offset = idx / max(1, len(series[-width:]) - 1)
+                x = padding + int(x_offset * (width - 2 * padding))
+                y_val = (1 - (val / span)) * (height - 2 * padding)
+                y = padding + int(y_val)
                 points.append((x, y))
             return points
 
@@ -718,24 +735,35 @@ class AutomatonApp:
         ent_points = normalize(entropy)
         comp_points = normalize(complexity, default_max=1.0)
 
-        for points, color in ((pop_points, "#2a9d8f"), (ent_points, "#f4a261"), (comp_points, "#e76f51")):
+        series_colors = [
+            (pop_points, "#2a9d8f"),
+            (ent_points, "#f4a261"),
+            (comp_points, "#e76f51")
+        ]
+        for points, color in series_colors:
             if len(points) >= 2:
-                canvas.create_line(points, fill=color, width=2, smooth=True)
+                canvas.create_line(
+                    points, fill=color, width=2, smooth=True
+                )
 
     def _update_cycle_label(self) -> None:
         """Refresh the cycle detection label."""
 
         label = self.widgets.cycle_label
         if self.state.cycle_period:
-            label.config(text=f"Cycle detected: {self.state.cycle_period} gens", foreground="#1b5e20")
+            text = f"Cycle detected: {self.state.cycle_period} gens"
+            label.config(text=text, foreground="#1b5e20")  # type: ignore[attr-defined]
         else:
-            label.config(text="Cycle: –", foreground="#555")
+            label.config(text="Cycle: –", foreground="#555")  # type: ignore[attr-defined]
 
     def export_metrics(self) -> None:
         """Export per-generation metrics to CSV."""
 
         if not self.state.metrics_log:
-            messagebox.showinfo("No Data", "Run the simulation to collect metrics before exporting.")
+            messagebox.showinfo(
+                "No Data",
+                "Run the simulation to collect metrics before exporting."
+            )
             return
         filename = filedialog.asksaveasfilename(
             defaultextension=".csv",
@@ -744,9 +772,10 @@ class AutomatonApp:
         if not filename:
             return
 
-        import csv
-
-        fieldnames = ["generation", "live", "delta", "density", "entropy", "complexity", "cycle_period"]
+        fieldnames = [
+            "generation", "live", "delta", "density",
+            "entropy", "complexity", "cycle_period"
+        ]
         try:
             with open(filename, "w", encoding="utf-8", newline="") as handle:
                 writer = csv.DictWriter(handle, fieldnames=fieldnames)

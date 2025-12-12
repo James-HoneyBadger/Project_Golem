@@ -44,7 +44,7 @@ class LangtonsAnt(CellularAutomaton):
     def get_grid(self) -> np.ndarray:
         display_grid = self.grid.copy()
         display_grid[self.ant_y, self.ant_x] = 2
-        return display_grid
+        return display_grid  # type: ignore[no-any-return]
 
     def handle_click(self, x: int, y: int) -> None:
         self.ant_x = x
